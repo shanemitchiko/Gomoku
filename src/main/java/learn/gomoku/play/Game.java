@@ -6,12 +6,9 @@ import learn.gomoku.game.Stone;
 import learn.gomoku.players.HumanPlayer;
 import learn.gomoku.players.Player;
 import learn.gomoku.players.RandomPlayer;
-
 import java.util.ArrayList;
 import java.util.Scanner;
-
 import static learn.gomoku.game.Gomoku.WIDTH;
-
 
 public class Game {
     private static Gomoku gomoku;
@@ -19,8 +16,7 @@ public class Game {
     public static String BLACK_STONE = "X";
     public static String WHITE_STONE = "O";
 
-
-    public void run() {
+    public static void run() {
         System.out.println("Welcome to Gomoku");
         System.out.println("=================");
 
@@ -28,20 +24,34 @@ public class Game {
     }
 
     private static void setUp() {
+        Scanner console = new Scanner(System.in);
         Player currentPlayer;
+        Boolean playAgain;
 
-        Player playerOne = receivePlayerSelection(1);
-        Player playerTwo = receivePlayerSelection(2);
+            Player playerOne = receivePlayerSelection(1);
+            Player playerTwo = receivePlayerSelection(2);
 
-        System.out.println("(Randomizing)");
+            System.out.println("(Randomizing)");
 
-        gomoku = new Gomoku(playerOne, playerTwo);
-        currentPlayer = gomoku.getCurrent();
-        System.out.println(currentPlayer + "goes first");
+            gomoku = new Gomoku(playerOne, playerTwo);
+            currentPlayer = gomoku.getCurrent();
+            System.out.println(currentPlayer.getName() + " goes first");
 
-        gamePlay(currentPlayer);
+            while (!gomoku.isOver()) {
+                getPlayerMove(gomoku);
+            }
+            Player winner = gomoku.getWinner();
+            System.out.println(winner.getName() + " won!");
+            System.out.println();
+            System.out.println("Do you want to play again? [Y/N]");
+            String confirm = console.nextLine().toUpperCase();
+            if (confirm.equals("Y")) {
+                run();
+            } else {
+                System.out.println("Thanks for playing!");
+            }
 
-    }
+        }
 
     public static Player receivePlayerSelection(int playerNumber) {
         Player player;
@@ -64,14 +74,12 @@ public class Game {
         return player;
     }
 
-    public static Result gamePlay(Player currentPlayer) {
-
-        Result result = null;
-        boolean turnisValid = true;
+    public static Result getPlayerMove(Gomoku gomoku) {
+        Result result;
         Stone stone;
+        Player currentPlayer = gomoku.getCurrent();
 
-        while (turnisValid) {
-
+         do {
             System.out.println(currentPlayer.getName() + "'s Turn");
 
             if (gomoku.getCurrent() instanceof HumanPlayer) {
@@ -79,25 +87,20 @@ public class Game {
             } else {
                 stone = gomoku.getCurrent().generateMove(gomoku.getStones());
             }
-
             result = gomoku.place(stone);
-            turnisValid = result.isSuccess();
-            if (turnisValid) {
-            } else {
-                display(result);
+            if (!result.isSuccess()) {
+                System.out.println(result.getMessage());
             }
             printBoard();
-        }
+        } while (!result.isSuccess());
         return result;
     }
-
 
     public static int receiveRow() {
         Scanner console = new Scanner(System.in);
 
         System.out.println("Enter a row: ");
         int row = Integer.parseInt(console.nextLine());
-
         return row - 1;
     }
 
@@ -106,12 +109,7 @@ public class Game {
 
         System.out.println("Enter a column: ");
         int col = Integer.parseInt(console.nextLine());
-
         return col - 1;
-    }
-
-    public static void display(Result result) {
-        System.out.println(result.getMessage());
     }
 
     public static void printBoard() {
@@ -124,24 +122,25 @@ public class Game {
         }
         System.out.println();
 
-        for(int row = 1; row <= WIDTH; row++) {
-            for(int col = 1; col <= WIDTH; col++) {
-                for(Stone s : stones) {
-                    if(s.getRow() == row && s.getColumn() == col) {
-                        if(s.isBlack()) {
-                            System.out.println(BLACK_STONE);
+        for(int row = 0; row < WIDTH; row++) {
+            System.out.printf("%02d", row + 1);
+            for(int col = 0; col < WIDTH; col++) {
+                boolean foundStone = false;
+                for (Stone s : stones) {
+                    if (s.getRow() == row && s.getColumn() == col) {
+                        foundStone = true;
+                        if (s.isBlack()) {
+                            System.out.print(" " + BLACK_STONE + " ");
                         } else {
-                            System.out.println(WHITE_STONE);
+                            System.out.print(" " + WHITE_STONE + " ");
                         }
                     }
-                    System.out.print(EMPTY_SLOT);
+                }
+                if (!foundStone) {
+                    System.out.print(" " + EMPTY_SLOT + " ");
                 }
             }
-            System.out.print("");
-        for( row = 1 ; row <= WIDTH; row++) {
-            System.out.printf("%02d\n", row);
-        }
-        System.out.println();
+            System.out.println();
         }
     }
 }
